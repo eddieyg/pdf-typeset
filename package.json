@@ -1,0 +1,22 @@
+{
+  "name": "pdf-typeset",
+  "version": "1.0.0",
+  "description": "",
+  "main": "/src/main.js",
+  "author": "eddieyg",
+  "email": "eddiezhao@foxmail.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/eddieyg/pdf-typeset.git"
+  },  
+  "license": "ISC",
+  "keywords": [
+    "pdf排版",
+    "pdf小册子排版处理",
+    "小册子"
+  ],
+  "scripts": {},
+  "dependencies": {
+    "pdf-lib": "^1.10.0"
+  }
+}
