@@ -3,19 +3,19 @@ const fs = require('fs')
 
 /**
  * 用空白页填补，将PDF的页数处理成多少倍数
- * @param {*} sourcePath 原PDF路径
+ * @param {*} options.sourcePath 原PDF路径
  * @param {*} options.outputPath 输出路径
  * @param {number} options.insertIndex 插入空白页的原PDF索引
  * @param {number} options.times PDF处理页面倍数
  * @param {number} options.fillPagePath 填补页面倍数的pdf（取第一页）
  * @param {function} cb 处理完成后的回调
  */
-const toTimes = async function(sourcePath, options = {}, cb) {
+const toTimes = async function(options = {}, cb) {
+  const { sourcePath, outputPath, insertIndex, times = 1, fillPagePath } = options
   if (!fs.existsSync(sourcePath)) {
     typeof cb === 'function' && cb(null, `${sourcePath} The path file does not exist！`)
     return
   }
-  const { outputPath, insertIndex, times = 1, fillPagePath } = options
   const blankDoc = await PDFDocument.create()
   const sourcePDF = await PDFDocument.load(fs.readFileSync(sourcePath))
   const pageNum = sourcePDF.getPages().length
@@ -23,7 +23,7 @@ const toTimes = async function(sourcePath, options = {}, cb) {
   let needAdd = pageNum % times ? (times - pageNum % times) : 0
   let pageInsertIndex = insertIndex // 空白页插入的位置
 
-  if (fs.existsSync(fillPagePath)) {
+  if (fillPagePath && fs.existsSync(fillPagePath)) {
     fillPDF = await PDFDocument.load(fs.readFileSync(fillPagePath))
   }
   if (typeof insertIndex === 'undefined') {
@@ -62,21 +62,21 @@ const toTimes = async function(sourcePath, options = {}, cb) {
 
 /**
  * 处理成书册子排版
- * @param {*} sourcePath 原PDF路径
+ * @param {*} options.sourcePath 原PDF路径
  * @param {*} options.outputPath 输出路径
  * @param {number} options.insertIndex 4倍页数补差的空白页 插入的原PDF索引
  * @param {number} options.fillPagePath 填补页面倍数的pdf（取第一页）
  * @param {function} cb 处理完成后的回调
  */
-const toBook = async function(sourcePath, options = {}, cb) {
+const toBook = async function(options = {}, cb) {
+  const { sourcePath, outputPath, insertIndex, fillPagePath } = options
   if (!fs.existsSync(sourcePath)) {
     typeof cb === 'function' && cb(null, `${sourcePath} The path file does not exist！`)
     return
   }
-  const { outputPath, insertIndex, fillPagePath } = options
   const resPDF = await PDFDocument.create()
   let sourcePDF = await PDFDocument.load(
-    await toTimes(sourcePath, { insertIndex, times: 4, fillPagePath })
+    await toTimes({ sourcePath, insertIndex, times: 4, fillPagePath })
   )
 
   const pageWidth = 1190  // A3单页宽度
