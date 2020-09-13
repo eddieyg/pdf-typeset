@@ -1,7 +1,8 @@
 const fs = require('fs')
 const PDFTypeset = require('../src/main')
 
-// PDFTypeset.toTimes('source.pdf', {
+// PDFTypeset.toTimes({
+//   sourcePath: 'source.pdf', 
 //   insertIndex: -2,
 //   times: 5,
 //   fillPagePath: 'report.pdf',
@@ -9,7 +10,8 @@ const PDFTypeset = require('../src/main')
 //   if (data) fs.writeFileSync(`source-after.pdf`, data)
 // })
 
-PDFTypeset.toBook('report.pdf', {
+PDFTypeset.toBook({
+  sourcePath: 'report.pdf', 
   insertIndex: -2,
   fillPagePath: 'report.pdf',
 }, (data) => {
