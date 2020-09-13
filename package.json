@@ -1,6 +1,6 @@
 {
   "name": "pdf-typeset",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "",
   "main": "src/main.js",
   "author": "eddieyg",
@@ -13,6 +13,7 @@
   "keywords": [
     "pdf排版",
     "pdf小册子排版处理",
+    "pdf A3",
     "小册子"
   ],
   "scripts": {},
