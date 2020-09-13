@@ -50,4 +50,4 @@ toBook({
 ```
 
 #### 书册子A3排版效果
-<img src="./static/tobook-pdf-a3.png" style="margin: 10px; width: 200px;" />
+<img src="./static/tobook-pdf-a3.png" width="200" />
