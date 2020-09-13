@@ -3,11 +3,11 @@ const fs = require('fs')
 
 /**
  * 用空白页填补，将PDF的页数处理成多少倍数
- * @param {*} options.sourcePath 原PDF路径
- * @param {*} options.outputPath 输出路径
+ * @param {path} options.sourcePath 原PDF路径
+ * @param {path} options.outputPath 输出路径
+ * @param {path} options.fillPagePath 填补页面倍数的pdf（取第一页）
  * @param {number} options.insertIndex 插入空白页的原PDF索引
  * @param {number} options.times PDF处理页面倍数
- * @param {number} options.fillPagePath 填补页面倍数的pdf（取第一页）
  * @param {function} cb 处理完成后的回调
  */
 const toTimes = async function(options = {}, cb) {
