@@ -13,51 +13,60 @@ const fs = require('fs')
 const toTimes = async function(options = {}, cb) {
   const { sourcePath, outputPath, insertIndex, times = 1, fillPagePath } = options
   if (!fs.existsSync(sourcePath)) {
-    typeof cb === 'function' && cb(null, `${sourcePath} The path file does not exist！`)
+    typeof cb === 'function' && cb(null, `toTimes()，${sourcePath} The path file does not exist！`)
     return
   }
-  const blankDoc = await PDFDocument.create()
-  const sourcePDF = await PDFDocument.load(fs.readFileSync(sourcePath))
-  const pageNum = sourcePDF.getPages().length
-  let fillPDF
-  let needAdd = pageNum % times ? (times - pageNum % times) : 0
-  let pageInsertIndex = insertIndex // 空白页插入的位置
 
-  if (fillPagePath && fs.existsSync(fillPagePath)) {
-    fillPDF = await PDFDocument.load(fs.readFileSync(fillPagePath))
-  }
-  if (typeof insertIndex === 'undefined') {
-    pageInsertIndex = pageNum
-  } else if (insertIndex < 0) {
-    pageInsertIndex = pageNum + insertIndex
-  }
+  try {
 
-  while(needAdd--) {
-    // 添加倍数的补差空白页
-    let page = blankDoc.addPage()
-    if (fillPDF) {
-      let fillPage = await blankDoc.embedPage(fillPDF.getPages()[0])
-      page.drawPage(fillPage, {
-        x: 0,
-        y: 0,
-      })
-    } else {
-      page.drawLine({
-        start: { x: 0, y: 0 },
-        end: { x: 0, y: 0 },
-        thickness: 0,
-        color: rgb(0, 0, 0),
-        opacity: 0,
-      })
+    const blankDoc = await PDFDocument.create()
+    const sourcePDF = await PDFDocument.load(fs.readFileSync(sourcePath))
+    const pageNum = sourcePDF.getPages().length
+    let fillPDF
+    let needAdd = pageNum % times ? (times - pageNum % times) : 0
+    let pageInsertIndex = insertIndex // 空白页插入的位置
+
+    if (fillPagePath && fs.existsSync(fillPagePath)) {
+      fillPDF = await PDFDocument.load(fs.readFileSync(fillPagePath))
     }
-  }
-  const docPages = await sourcePDF.copyPages(blankDoc, blankDoc.getPageIndices())
-  docPages.forEach(page => sourcePDF.insertPage(pageInsertIndex, page))
+    if (typeof insertIndex === 'undefined') {
+      pageInsertIndex = pageNum
+    } else if (insertIndex < 0) {
+      pageInsertIndex = pageNum + insertIndex
+    }
+
+    while(needAdd--) {
+      // 添加倍数的补差空白页
+      let page = blankDoc.addPage()
+      if (fillPDF) {
+        let fillPage = await blankDoc.embedPage(fillPDF.getPages()[0])
+        page.drawPage(fillPage, {
+          x: 0,
+          y: 0,
+        })
+      } else {
+        page.drawLine({
+          start: { x: 0, y: 0 },
+          end: { x: 0, y: 0 },
+          thickness: 0,
+          color: rgb(0, 0, 0),
+          opacity: 0,
+        })
+      }
+    }
+    const docPages = await sourcePDF.copyPages(blankDoc, blankDoc.getPageIndices())
+    docPages.forEach(page => sourcePDF.insertPage(pageInsertIndex, page))
   
-  let resBuffer = await sourcePDF.save()
-  outputPath && fs.writeFileSync(`${outputPath}.pdf`, resBuffer)
-  typeof cb === 'function' && cb(resBuffer)
-  return resBuffer
+    let resBuffer = await sourcePDF.save()
+    outputPath && fs.writeFileSync(`${outputPath}.pdf`, resBuffer)
+    typeof cb === 'function' && cb(resBuffer)
+    return resBuffer
+
+  } catch(err) {
+    typeof cb === 'function' && cb(null, `toTimes()，${err.message}`)
+    return
+  }
+
 }
 
 /**
@@ -71,45 +80,61 @@ const toTimes = async function(options = {}, cb) {
 const toBook = async function(options = {}, cb) {
   const { sourcePath, outputPath, insertIndex, fillPagePath } = options
   if (!fs.existsSync(sourcePath)) {
-    typeof cb === 'function' && cb(null, `${sourcePath} The path file does not exist！`)
+    typeof cb === 'function' && cb(null, `toBook()，${sourcePath} The path file does not exist！`)
     return
   }
-  const resPDF = await PDFDocument.create()
-  let sourcePDF = await PDFDocument.load(
-    await toTimes({ sourcePath, insertIndex, times: 4, fillPagePath })
-  )
 
-  const pageWidth = 1190  // A3单页宽度
-  const pageHeight = 842  // A3单页高度
-  const pageNum = sourcePDF.getPages().length
-  let pageIndexs = Array.apply(null, {length: pageNum}).map((e, i) => i)
-  let count = 1
+  try {
+    let isOver = false
+    const resPDF = await PDFDocument.create()
+    let sourceBuffer = await toTimes(
+      { sourcePath, insertIndex, times: 4, fillPagePath }, 
+      (data, errMsg) => {
+        if (errMsg) {
+          isOver = true
+          cb(null, errMsg)
+        }
+      }
+    )
+    if (isOver) return
+    let sourcePDF = await PDFDocument.load(sourceBuffer)
 
-  while(count <= (pageNum / 2)) {
-    let page = resPDF.addPage([pageWidth, pageHeight])
-    let start = pageIndexs[count - 1]
-    let end = pageIndexs[pageNum - count]
-    let left = await resPDF.embedPage(sourcePDF.getPages()[
-      count % 2 ? end : start
-    ])
-    let right = await resPDF.embedPage(sourcePDF.getPages()[
-      count % 2 ? start : end
-    ])
-    page.drawPage(left, {
-      x: 0,
-      y: 0,
-    })
-    page.drawPage(right, {
-      x: pageWidth - right.width,
-      y: 0,
-    })
-    count++
+    const pageWidth = 1190  // A3单页宽度
+    const pageHeight = 842  // A3单页高度
+    const pageNum = sourcePDF.getPages().length
+    let pageIndexs = Array.apply(null, {length: pageNum}).map((e, i) => i)
+    let count = 1
+
+    while(count <= (pageNum / 2)) {
+      let page = resPDF.addPage([pageWidth, pageHeight])
+      let start = pageIndexs[count - 1]
+      let end = pageIndexs[pageNum - count]
+      let left = await resPDF.embedPage(sourcePDF.getPages()[
+        count % 2 ? end : start
+      ])
+      let right = await resPDF.embedPage(sourcePDF.getPages()[
+        count % 2 ? start : end
+      ])
+      page.drawPage(left, {
+        x: 0,
+        y: 0,
+      })
+      page.drawPage(right, {
+        x: pageWidth - right.width,
+        y: 0,
+      })
+      count++
+    }
+
+    let resBuffer = await resPDF.save()
+    outputPath && fs.writeFileSync(`${outputPath}.pdf`, resBuffer)
+    typeof cb === 'function' && cb(resBuffer)
+    return resBuffer
+    
+  } catch(err) {
+    typeof cb === 'function' && cb(null, `toBook()，${err.message}`)
   }
 
-  let resBuffer = await resPDF.save()
-  outputPath && fs.writeFileSync(`${outputPath}.pdf`, resBuffer)
-  typeof cb === 'function' && cb(resBuffer)
-  return resBuffer
 }
 
 module.exports = {
